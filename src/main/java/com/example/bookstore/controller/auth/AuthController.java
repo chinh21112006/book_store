@@ -16,9 +16,13 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import jakarta.servlet.http.HttpSession; // ADDED
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Map; // ADDED
+import java.util.LinkedHashMap; // ADDED
+import java.util.HashMap; // ADDED
 
 @Controller
 public class AuthController {
@@ -59,7 +63,7 @@ public class AuthController {
     @GetMapping("/home")
     public String homePage(Model model) {
         model.addAttribute("books", bookService.getAllBooks());
-        return "home";
+        return "user/home/home"; // Updated path
     }
 
     // Method to display book details
@@ -78,7 +82,7 @@ public class AuthController {
                                             .collect(Collectors.toList());
             model.addAttribute("relatedBooks", relatedBooks);
 
-            return "user/book-detail"; // Return view book-detail.jsp
+            return "user/books/book-detail"; // Updated path
         } else {
             // Handle case where book is not found, e.g., redirect to home or error page
             return "redirect:/home";
@@ -89,14 +93,14 @@ public class AuthController {
     @GetMapping("/bestsellers")
     public String bestsellersPage(Model model) {
         model.addAttribute("bestsellers", bookService.getAllBooks()); // Assuming all books are bestsellers for now
-        return "user/bestsellers"; // Trả về view bestsellers.jsp
+        return "user/bestsellers/bestsellers"; // Updated path
     }
 
     // New method to display categories page
     @GetMapping("/categories")
     public String categoriesPage(Model model) {
         model.addAttribute("categories", categoryService.getAllCategories());
-        return "user/categories"; // Trả về view categories.jsp
+        return "user/categories/categories"; // Updated path
     }
 
     // New method to display books by category
@@ -107,7 +111,7 @@ public class AuthController {
             Category category = categoryOptional.get();
             model.addAttribute("category", category);
             model.addAttribute("books", bookService.getBooksByCategory(category));
-            return "user/books-by-category"; // Trả về view books-by-category.jsp
+            return "user/categories/books-by-category"; // Updated path
         } else {
             // Handle case where category is not found
             return "redirect:/categories";
@@ -118,7 +122,7 @@ public class AuthController {
     @GetMapping("/authors")
     public String authorsPage(Model model) {
         model.addAttribute("authors", authorService.getAllAuthors());
-        return "user/authors"; // Trả về view authors.jsp
+        return "user/authors/authors"; // Updated path
     }
 
     // New method to display books by author
@@ -129,10 +133,28 @@ public class AuthController {
             Author author = authorOptional.get();
             model.addAttribute("author", author);
             model.addAttribute("books", bookService.getBooksByAuthor(author));
-            return "user/books-by-author"; // Trả về view books-by-author.jsp
+            return "user/authors/books-by-author"; // Updated path
         } else {
             // Handle case where author is not found
             return "redirect:/authors";
         }
+    }
+
+    // New method for cart page
+    @GetMapping("/cart")
+    public String viewCart(HttpSession session, Model model) {
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cart");
+        Map<Book, Integer> cartItems = new LinkedHashMap<>();
+
+        if (cart != null && !cart.isEmpty()) {
+            for (Map.Entry<Long, Integer> entry : cart.entrySet()) {
+                Long bookId = entry.getKey();
+                Integer quantity = entry.getValue();
+                Optional<Book> bookOptional = bookService.getBookById(bookId);
+                bookOptional.ifPresent(book -> cartItems.put(book, quantity));
+            }
+        }
+        model.addAttribute("cartItems", cartItems);
+        return "user/cart/cart"; // Updated path
     }
 }
