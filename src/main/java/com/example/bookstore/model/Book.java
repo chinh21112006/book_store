@@ -10,7 +10,11 @@ public class Book {
     private Long id;
 
     private String title;
-    private String author;
+
+    @ManyToOne // Many books can be written by one author
+    @JoinColumn(name = "author_id") // This will create an author_id column in the books table
+    private Author author; // Changed from String to Author object
+
     private Double price;
     private Double oldPrice;
 
@@ -19,17 +23,22 @@ public class Book {
 
     @Column(columnDefinition = "TEXT")
     private String description;
-    private String category;
+
+    @ManyToOne // Many books can belong to one category
+    @JoinColumn(name = "category_id") // This will create a category_id column in the books table
+    private Category category;
 
     // Constructors
     public Book() {}
 
-    public Book(String title, String author, Double price, Double oldPrice, String imageUrl, String category) {
+    // Updated constructor to accept Author and Category objects
+    public Book(String title, Author author, Double price, Double oldPrice, String imageUrl, String description, Category category) {
         this.title = title;
         this.author = author;
         this.price = price;
         this.oldPrice = oldPrice;
         this.imageUrl = imageUrl;
+        this.description = description;
         this.category = category;
     }
 
@@ -38,8 +47,11 @@ public class Book {
     public void setId(Long id) { this.id = id; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
+
+    // Updated getter and setter for Author object
+    public Author getAuthor() { return author; }
+    public void setAuthor(Author author) { this.author = author; }
+
     public Double getPrice() { return price; }
     public void setPrice(Double price) { this.price = price; }
     public Double getOldPrice() { return oldPrice; }
@@ -48,6 +60,6 @@ public class Book {
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
 }
