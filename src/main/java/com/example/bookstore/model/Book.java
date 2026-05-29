@@ -1,6 +1,8 @@
 package com.example.bookstore.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp; // Import CreationTimestamp
+import java.time.LocalDateTime; // Import LocalDateTime
 
 @Entity
 @Table(name = "books")
@@ -28,6 +30,10 @@ public class Book {
     @JoinColumn(name = "category_id") // This will create a category_id column in the books table
     private Category category;
 
+    @CreationTimestamp // Automatically sets the creation timestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
     // Constructors
     public Book() {}
 
@@ -48,7 +54,6 @@ public class Book {
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
-    // Updated getter and setter for Author object
     public Author getAuthor() { return author; }
     public void setAuthor(Author author) { this.author = author; }
 
@@ -62,4 +67,7 @@ public class Book {
     public void setDescription(String description) { this.description = description; }
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

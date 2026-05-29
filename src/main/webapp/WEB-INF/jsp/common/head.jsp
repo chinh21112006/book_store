@@ -84,3 +84,6 @@
         .hero-gradient { background: linear-gradient(to right, #fefee5 20%, transparent 100%); }
         .book-card-shadow { box-shadow: 0 4px 20px -2px rgba(147, 75, 25, 0.08); }
 </style>
+<meta name="_csrf" content="${_csrf.token}"/>
+<meta name="_csrf_header" content="${_csrf.headerName}"/>
+<jsp:include page="/WEB-INF/jsp/common/wishlist-script.jsp"/>

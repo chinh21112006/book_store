@@ -33,29 +33,9 @@
                     <div class="absolute -top-12 -left-4 font-headline text-8xl rank-number opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity">
                         <fmt:formatNumber value="${loop.index + 1}" minIntegerDigits="2"/>
                     </div>
-                    <div class="book-card-shadow relative aspect-[2/3] overflow-hidden rounded-lg bg-surface-container-low mb-6">
-                        <a href="${pageContext.request.contextPath}/books/${book.id}">
-                            <img alt="${book.title}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="${book.imageUrl}"/>
-                        </a>
-                        <div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300"></div>
-                    </div>
-                    <div class="flex-grow">
-                        <a href="${pageContext.request.contextPath}/books/${book.id}">
-                            <h3 class="font-headline text-xl text-on-surface mb-1 leading-snug group-hover:text-primary transition-colors">${book.title}</h3>
-                        </a>
-                        <p class="font-body text-label-md text-on-surface-variant mb-4">${book.author.name}</p>
-                        <p class="font-body text-headline-sm font-bold text-primary mb-6">
-                            <fmt:formatNumber value="${book.price}" type="number" groupingUsed="true"/>đ
-                        </p>
-                    </div>
-                    <form action="${pageContext.request.contextPath}/cart/add" method="post">
-                        <input type="hidden" name="bookId" value="${book.id}"/>
-                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                        <button type="submit" class="bg-gradient-primary text-on-primary font-body py-3 px-4 rounded-lg flex items-center justify-center space-x-2 w-full scale-95 hover:scale-100 transition-transform active:scale-95 shadow-lg shadow-primary/10">
-                            <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
-                            <span class="font-semibold text-sm">Thêm vào giỏ</span>
-                        </button>
-                    </form>
+                    <c:set var="currentBook" value="${book}" scope="request"/>
+                    <c:set var="isFavorite" value="${favoriteBookIds.contains(book.id)}" scope="request"/>
+                    <jsp:include page="/WEB-INF/jsp/common/book-card.jsp"/>
                 </article>
             </c:forEach>
         </div>

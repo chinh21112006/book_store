@@ -33,34 +33,9 @@
             <c:choose>
                 <c:when test="${not empty books}">
                     <c:forEach items="${books}" var="book">
-                        <div class="group">
-                            <div class="aspect-[2/3] bg-white rounded-lg overflow-hidden relative mb-6 shadow-sm border border-gray-100">
-                                <a href="${pageContext.request.contextPath}/books/${book.id}">
-                                    <img alt="${book.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${book.imageUrl}"/>
-                                </a>
-                                <form action="${pageContext.request.contextPath}/cart/add" method="post">
-                                    <input type="hidden" name="bookId" value="${book.id}"/>
-                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                                    <button type="submit" class="absolute bottom-4 left-4 right-4 bg-primary text-on-primary py-3 rounded-lg font-bold opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2">
-                                        <span class="material-symbols-outlined text-sm">shopping_cart</span> Thêm Vào Giỏ
-                                    </button>
-                                </form>
-                            </div>
-                            <a href="${pageContext.request.contextPath}/books/${book.id}">
-                                <h3 class="font-serif text-xl font-bold mb-1 group-hover:text-primary transition-colors">${book.title}</h3>
-                            </a>
-                            <p class="text-gray-500 text-sm mb-3">${book.author.name}</p>
-                            <div class="flex items-center gap-2">
-                                <span class="text-primary font-bold text-lg">
-                                    <fmt:formatNumber value="${book.price}" type="number" groupingUsed="true"/>đ
-                                </span>
-                                <c:if test="${book.oldPrice != null}">
-                                    <span class="text-gray-300 line-through text-sm">
-                                        <fmt:formatNumber value="${book.oldPrice}" type="number" groupingUsed="true"/>đ
-                                    </span>
-                                </c:if>
-                            </div>
-                        </div>
+                        <c:set var="currentBook" value="${book}" scope="request"/>
+                        <c:set var="isFavorite" value="${favoriteBookIds.contains(book.id)}" scope="request"/>
+                        <jsp:include page="/WEB-INF/jsp/common/book-card.jsp"/>
                     </c:forEach>
                 </c:when>
                 <c:otherwise>

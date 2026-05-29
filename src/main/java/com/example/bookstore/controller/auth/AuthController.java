@@ -4,25 +4,33 @@ import com.example.bookstore.model.Book;
 import com.example.bookstore.model.Category;
 import com.example.bookstore.model.Author;
 import com.example.bookstore.model.User;
+import com.example.bookstore.model.Order;
+import com.example.bookstore.model.Address; // Import Address model
 import com.example.bookstore.service.BookService;
 import com.example.bookstore.service.CategoryService;
 import com.example.bookstore.service.AuthorService;
 import com.example.bookstore.service.UserService;
+import com.example.bookstore.service.OrderService;
+import com.example.bookstore.service.AddressService; // Import AddressService
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import jakarta.servlet.http.HttpSession; // ADDED
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.Map; // ADDED
-import java.util.LinkedHashMap; // ADDED
-import java.util.HashMap; // ADDED
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.HashMap;
 
 @Controller
 public class AuthController {
@@ -38,6 +46,22 @@ public class AuthController {
 
     @Autowired
     private AuthorService authorService;
+
+    @Autowired
+    private OrderService orderService;
+
+    @Autowired
+    private AddressService addressService; // Inject AddressService
+
+    @ModelAttribute("loggedInUser")
+    public User getLoggedInUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            return userService.findByEmail(userDetails.getUsername());
+        }
+        return null;
+    }
 
     @GetMapping("/login")
     public String loginPage() {
@@ -63,10 +87,16 @@ public class AuthController {
     @GetMapping("/home")
     public String homePage(Model model) {
         model.addAttribute("books", bookService.getAllBooks());
-        return "user/home/home"; // Updated path
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser != null) {
+            Set<Long> favoriteBookIds = userService.getFavoriteBooks(loggedInUser).stream()
+                                                .map(Book::getId)
+                                                .collect(Collectors.toSet());
+            model.addAttribute("favoriteBookIds", favoriteBookIds);
+        }
+        return "user/home/home";
     }
 
-    // Method to display book details
     @GetMapping("/books/{id}")
     public String bookDetailPage(@PathVariable("id") Long id, Model model) {
         Optional<Book> bookOptional = bookService.getBookById(id);
@@ -74,36 +104,43 @@ public class AuthController {
             Book book = bookOptional.get();
             model.addAttribute("book", book);
 
-            // Get all books and filter out the current book for related books
             List<Book> allBooks = bookService.getAllBooks();
             List<Book> relatedBooks = allBooks.stream()
                                             .filter(b -> !b.getId().equals(id))
-                                            .limit(4) // Limit to 4 related books
+                                            .limit(4)
                                             .collect(Collectors.toList());
             model.addAttribute("relatedBooks", relatedBooks);
 
-            return "user/books/book-detail"; // Updated path
+            User loggedInUser = getLoggedInUser();
+            if (loggedInUser != null) {
+                model.addAttribute("isFavorite", userService.isBookFavorite(loggedInUser, id));
+            }
+
+            return "user/books/book-detail";
         } else {
-            // Handle case where book is not found, e.g., redirect to home or error page
             return "redirect:/home";
         }
     }
 
-    // New method to display bestsellers page
     @GetMapping("/bestsellers")
     public String bestsellersPage(Model model) {
-        model.addAttribute("bestsellers", bookService.getAllBooks()); // Assuming all books are bestsellers for now
-        return "user/bestsellers/bestsellers"; // Updated path
+        model.addAttribute("bestsellers", bookService.getAllBooks());
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser != null) {
+            Set<Long> favoriteBookIds = userService.getFavoriteBooks(loggedInUser).stream()
+                                                .map(Book::getId)
+                                                .collect(Collectors.toSet());
+            model.addAttribute("favoriteBookIds", favoriteBookIds);
+        }
+        return "user/bestsellers/bestsellers";
     }
 
-    // New method to display categories page
     @GetMapping("/categories")
     public String categoriesPage(Model model) {
         model.addAttribute("categories", categoryService.getAllCategories());
-        return "user/categories/categories"; // Updated path
+        return "user/categories/categories";
     }
 
-    // New method to display books by category
     @GetMapping("/categories/{id}")
     public String booksByCategoryPage(@PathVariable("id") Long id, Model model) {
         Optional<Category> categoryOptional = categoryService.getCategoryById(id);
@@ -111,21 +148,25 @@ public class AuthController {
             Category category = categoryOptional.get();
             model.addAttribute("category", category);
             model.addAttribute("books", bookService.getBooksByCategory(category));
-            return "user/categories/books-by-category"; // Updated path
+            User loggedInUser = getLoggedInUser();
+            if (loggedInUser != null) {
+                Set<Long> favoriteBookIds = userService.getFavoriteBooks(loggedInUser).stream()
+                                                    .map(Book::getId)
+                                                    .collect(Collectors.toSet());
+                model.addAttribute("favoriteBookIds", favoriteBookIds);
+            }
+            return "user/categories/books-by-category";
         } else {
-            // Handle case where category is not found
             return "redirect:/categories";
         }
     }
 
-    // New method to display authors page
     @GetMapping("/authors")
     public String authorsPage(Model model) {
         model.addAttribute("authors", authorService.getAllAuthors());
-        return "user/authors/authors"; // Updated path
+        return "user/authors/authors";
     }
 
-    // New method to display books by author
     @GetMapping("/authors/{id}")
     public String booksByAuthorPage(@PathVariable("id") Long id, Model model) {
         Optional<Author> authorOptional = authorService.getAuthorById(id);
@@ -133,14 +174,19 @@ public class AuthController {
             Author author = authorOptional.get();
             model.addAttribute("author", author);
             model.addAttribute("books", bookService.getBooksByAuthor(author));
-            return "user/authors/books-by-author"; // Updated path
+            User loggedInUser = getLoggedInUser();
+            if (loggedInUser != null) {
+                Set<Long> favoriteBookIds = userService.getFavoriteBooks(loggedInUser).stream()
+                                                    .map(Book::getId)
+                                                    .collect(Collectors.toSet());
+                model.addAttribute("favoriteBookIds", favoriteBookIds);
+            }
+            return "user/authors/books-by-author";
         } else {
-            // Handle case where author is not found
             return "redirect:/authors";
         }
     }
 
-    // New method for cart page
     @GetMapping("/cart")
     public String viewCart(HttpSession session, Model model) {
         Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cart");
@@ -155,6 +201,213 @@ public class AuthController {
             }
         }
         model.addAttribute("cartItems", cartItems);
-        return "user/cart/cart"; // Updated path
+        return "user/cart/cart";
+    }
+
+    @PostMapping("/cart/add")
+    public String addBookToCart(@RequestParam("bookId") Long bookId,
+                                @RequestParam(value = "quantity", defaultValue = "1") int quantity,
+                                HttpSession session,
+                                RedirectAttributes redirectAttributes) {
+        Map<Long, Integer> cart = (Map<Long, Integer>) session.getAttribute("cart");
+        if (cart == null) {
+            cart = new LinkedHashMap<>();
+            session.setAttribute("cart", cart);
+        }
+
+        cart.merge(bookId, quantity, Integer::sum); // Add quantity to existing or put new
+
+        redirectAttributes.addFlashAttribute("successMessage", "Sách đã được thêm vào giỏ hàng!");
+        return "redirect:/cart"; // Redirect to cart page or wherever appropriate
+    }
+
+    @GetMapping("/new-books")
+    public String newBooksPage(Model model) {
+        model.addAttribute("newBooks", bookService.getNewestBooks());
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser != null) {
+            Set<Long> favoriteBookIds = userService.getFavoriteBooks(loggedInUser).stream()
+                                                .map(Book::getId)
+                                                .collect(Collectors.toSet());
+            model.addAttribute("favoriteBookIds", favoriteBookIds);
+        }
+        return "user/new-books/new-books";
+    }
+
+    @GetMapping("/profile")
+    public String profilePage(Model model) {
+        model.addAttribute("user", getLoggedInUser());
+        return "user/profile/profile";
+    }
+
+    @PostMapping("/profile/update")
+    public String updateProfile(@ModelAttribute("user") User user, RedirectAttributes redirectAttributes) {
+        userService.updateProfile(user);
+        redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin thành công!");
+        return "redirect:/profile";
+    }
+
+    @GetMapping("/profile/orders")
+    public String myOrdersPage(Model model) {
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser != null) {
+            List<Order> orders = orderService.getOrdersByUser(loggedInUser);
+            model.addAttribute("orders", orders);
+            model.addAttribute("user", loggedInUser);
+            return "user/profile/orders";
+        }
+        return "redirect:/login";
+    }
+
+    @GetMapping("/profile/notifications")
+    public String myNotificationsPage(Model model) {
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser != null) {
+            model.addAttribute("user", loggedInUser);
+            return "user/profile/notifications";
+        }
+        return "redirect:/login";
+    }
+
+    @GetMapping("/profile/wishlist")
+    public String myWishlistPage(Model model) {
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser != null) {
+            Set<Book> favoriteBooks = userService.getFavoriteBooks(loggedInUser);
+            model.addAttribute("favoriteBooks", favoriteBooks);
+            model.addAttribute("user", loggedInUser);
+            return "user/profile/wishlist";
+        }
+        return "redirect:/login";
+    }
+
+    // New AJAX endpoint for toggling favorite status
+    @PostMapping("/api/wishlist/toggle/{bookId}")
+    @ResponseBody
+    public ResponseEntity<?> toggleFavoriteBook(@PathVariable("bookId") Long bookId, Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
+            return new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User loggedInUser = userService.findByEmail(userDetails.getUsername());
+
+        if (loggedInUser == null) {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+
+        boolean isFavorite = userService.isBookFavorite(loggedInUser, bookId);
+        if (isFavorite) {
+            userService.removeBookFromFavorites(loggedInUser, bookId);
+            isFavorite = false;
+        } else {
+            userService.addBookToFavorites(loggedInUser, bookId);
+            isFavorite = true;
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("isFavorite", isFavorite);
+        response.put("message", isFavorite ? "Sách đã được thêm vào danh sách yêu thích!" : "Sách đã được xóa khỏi danh sách yêu thích!");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // --- Address Management ---
+
+    @GetMapping("/profile/addresses")
+    public String myAddressesPage(Model model) {
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("user", loggedInUser);
+        model.addAttribute("addresses", addressService.getAddressesByUser(loggedInUser));
+        return "user/profile/addresses";
+    }
+
+    @GetMapping("/profile/addresses/add")
+    public String addAddressPage(Model model) {
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("address", new Address());
+        model.addAttribute("user", loggedInUser);
+        return "user/profile/address-form"; // Create a new JSP for the form
+    }
+
+    @PostMapping("/profile/addresses/add")
+    public String saveAddress(@ModelAttribute("address") Address address, RedirectAttributes redirectAttributes) {
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser == null) {
+            return "redirect:/login";
+        }
+        address.setUser(loggedInUser);
+        addressService.saveAddress(address);
+        redirectAttributes.addFlashAttribute("successMessage", "Địa chỉ đã được lưu thành công!");
+        return "redirect:/profile/addresses";
+    }
+
+    @GetMapping("/profile/addresses/edit/{id}")
+    public String editAddressPage(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser == null) {
+            return "redirect:/login";
+        }
+        Optional<Address> addressOptional = addressService.getAddressByIdAndUser(id, loggedInUser);
+        if (addressOptional.isPresent()) {
+            model.addAttribute("address", addressOptional.get());
+            model.addAttribute("user", loggedInUser);
+            return "user/profile/address-form";
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy địa chỉ hoặc bạn không có quyền chỉnh sửa.");
+            return "redirect:/profile/addresses";
+        }
+    }
+
+    @PostMapping("/profile/addresses/edit/{id}")
+    public String updateAddress(@PathVariable("id") Long id, @ModelAttribute("address") Address address, RedirectAttributes redirectAttributes) {
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser == null) {
+            return "redirect:/login";
+        }
+        // Ensure the address belongs to the logged-in user and update it
+        Optional<Address> existingAddressOptional = addressService.getAddressByIdAndUser(id, loggedInUser);
+        if (existingAddressOptional.isPresent()) {
+            Address existingAddress = existingAddressOptional.get();
+            existingAddress.setRecipientName(address.getRecipientName());
+            existingAddress.setPhoneNumber(address.getPhoneNumber());
+            existingAddress.setStreetAddress(address.getStreetAddress());
+            existingAddress.setCity(address.getCity());
+            existingAddress.setState(address.getState());
+            existingAddress.setZipCode(address.getZipCode());
+            existingAddress.setIsDefault(address.getIsDefault()); // Changed from setDefault() to setIsDefault() and isDefault() to getIsDefault()
+
+            addressService.saveAddress(existingAddress); // Save the updated address
+            redirectAttributes.addFlashAttribute("successMessage", "Địa chỉ đã được cập nhật thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy địa chỉ hoặc bạn không có quyền chỉnh sửa.");
+        }
+        return "redirect:/profile/addresses";
+    }
+
+    @PostMapping("/profile/addresses/delete/{id}")
+    public String deleteAddress(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser == null) {
+            return "redirect:/login";
+        }
+        addressService.deleteAddress(id, loggedInUser);
+        redirectAttributes.addFlashAttribute("successMessage", "Địa chỉ đã được xóa thành công!");
+        return "redirect:/profile/addresses";
+    }
+
+    @PostMapping("/profile/addresses/set-default/{id}")
+    public String setDefaultAddress(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        User loggedInUser = getLoggedInUser();
+        if (loggedInUser == null) {
+            return "redirect:/login";
+        }
+        addressService.setDefaultAddress(id, loggedInUser);
+        redirectAttributes.addFlashAttribute("successMessage", "Địa chỉ mặc định đã được cập nhật!");
+        return "redirect:/profile/addresses";
     }
 }

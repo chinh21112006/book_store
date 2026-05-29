@@ -17,7 +17,7 @@
     <main>
         <section class="relative h-[600px] overflow-hidden bg-orange-50">
             <div class="absolute inset-0 z-0">
-                <img alt="Atmospheric library" class="w-full h-full object-cover opacity-30 mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVGbX4_IVAg_bnK9IE6a_tC3sq4wWIcMRYlTVpPGxbvOvz8AFqMi-N-9FhJGSjeuI8mBvO1J5sm97FYXqCqFcyyX3tNa5CkdYgZmSTZOj1pqv72c0LKOw_B_uMFYtG_TaipAEGgsG4a5UDaB2GfIvT4h7YBZo89OYANRCwT_8VmBJaSYX6SgEMu4C839MTjP_zwSB7FgeU2EnXeq4Qlg-3lDllSfrOi1lXw5uHrJF6YfhcrF4kviTmhqKoPSvtpV4obvwaa50lMNO3e2"/>
+                <img alt="Atmospheric library" class="w-full h-full object-cover opacity-30 mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVGbX4_IVAg_bnK9IE6a_tC3sq4wWIcMRYlTVPPGxbvOvz8AFqMi-N-9FhJGSjeuI8mBvO1J5sm97FYXqCqFcyyX3tNa5CkdYgZmSTZOj1pqv72c0LKOw_B_uMFYt_TaipAEGgsG4a5UDaB2GfIvT4h7YBZo89OYANRCwT_8VmBJaSYX6SgEMu4C839MTjP_zwSB7FgeU2EnXeq4Qlg-3lDllSfrOi1lXw5uHrJF6YfhcrF4kviTmhqKoPSvtpV4obvwaa50lMNO3e2"/>
                 <div class="absolute inset-0 hero-gradient"></div>
             </div>
             <div class="relative z-10 max-w-[1440px] mx-auto px-12 h-full flex flex-col justify-center items-start">
@@ -48,7 +48,7 @@
                 <c:if test="${not empty books and books.size() > 0}">
                     <div class="col-span-6 bg-surface-container-lowest rounded-lg overflow-hidden group cursor-pointer relative book-card-shadow">
                         <a href="${pageContext.request.contextPath}/books/${books[0].id}">
-                            <img alt="${books[0].title}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="${books[0].imageUrl}"/>
+                            <img alt="${books[0].title}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="${books[0].imageUrl}"/>
                             <div class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 to-transparent text-white">
                                 <span class="bg-primary px-3 py-1 text-xs font-bold rounded mb-4 inline-block">SÁCH CỦA THÁNG</span>
                                 <h3 class="font-serif text-3xl font-bold mb-2">${books[0].title}</h3>
@@ -101,34 +101,9 @@
             <!-- HIỂN THỊ SÁCH ĐỘNG TỪ DATABASE -->
             <div class="grid grid-cols-4 gap-10">
                 <c:forEach items="${books}" var="book">
-                    <div class="group">
-                        <div class="aspect-[2/3] bg-white rounded-lg overflow-hidden relative mb-6 shadow-sm border border-gray-100">
-                            <a href="${pageContext.request.contextPath}/books/${book.id}">
-                                <img alt="${book.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${book.imageUrl}"/>
-                            </a>
-                            <form action="${pageContext.request.contextPath}/cart/add" method="post">
-                                <input type="hidden" name="bookId" value="${book.id}"/>
-                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                                <button type="submit" class="absolute bottom-4 left-4 right-4 bg-primary text-on-primary py-3 rounded-lg font-bold opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2">
-                                    <span class="material-symbols-outlined text-sm">shopping_cart</span> Thêm Vào Giỏ
-                                </button>
-                            </form>
-                        </div>
-                        <a href="${pageContext.request.contextPath}/books/${book.id}">
-                            <h3 class="font-serif text-xl font-bold mb-1 group-hover:text-primary transition-colors">${book.title}</h3>
-                        </a>
-                        <p class="text-gray-500 text-sm mb-3">${book.author.name}</p> <%-- Changed to book.author.name --%>
-                        <div class="flex items-center gap-2">
-                            <span class="text-primary font-bold text-lg">
-                                <fmt:formatNumber value="${book.price}" type="number" groupingUsed="true"/>đ
-                            </span>
-                            <c:if test="${book.oldPrice != null}">
-                                <span class="text-gray-300 line-through text-sm">
-                                    <fmt:formatNumber value="${book.oldPrice}" type="number" groupingUsed="true"/>đ
-                                </span>
-                            </c:if>
-                        </div>
-                    </div>
+                    <c:set var="currentBook" value="${book}" scope="request"/>
+                    <c:set var="isFavorite" value="${favoriteBookIds.contains(book.id)}" scope="request"/>
+                    <jsp:include page="/WEB-INF/jsp/common/book-card.jsp"/>
                 </c:forEach>
             </div>
         </section>

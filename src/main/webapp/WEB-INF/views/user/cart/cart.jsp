@@ -118,6 +118,7 @@
                     </a>
                     <c:if test="${not empty cartItems}">
                         <form action="${pageContext.request.contextPath}/cart/clear" method="post">
+                            <input type="hidden" name="bookId" value="${book.id}"/>
                             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                             <button type="submit" class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 text-sm font-medium">
                                 Làm trống giỏ hàng

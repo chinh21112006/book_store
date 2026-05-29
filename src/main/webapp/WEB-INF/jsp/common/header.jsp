@@ -10,7 +10,7 @@
                    <c:choose>
                        <c:when test="${param.currentPage == 'new'}">text-[#934b19] border-b-2 border-[#934b19] pb-1</c:when>
                        <c:otherwise>text-[#363b12] hover:text-[#934b19]</c:otherwise>
-                   </c:choose>" href="#">Sách Mới</a>
+                   </c:choose>" href="${pageContext.request.contextPath}/new-books">Sách Mới</a>
                 <a class="font-serif font-bold text-xl cursor-pointer transition-colors
                    <c:choose>
                        <c:when test="${param.currentPage == 'bestsellers'}">text-[#934b19] border-b-2 border-[#934b19] pb-1</c:when>
@@ -38,14 +38,24 @@
             </a>
 
             <div class="flex items-center gap-4">
-                <div class="flex flex-col items-end">
-                    <span class="text-sm font-bold text-primary"><sec:authentication property="principal.username" /></span>
-                    <form action="${pageContext.request.contextPath}/logout" method="POST" class="inline">
-                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                        <button type="submit" class="text-xs text-red-600 hover:underline">Đăng xuất</button>
-                    </form>
-                </div>
-                <span class="material-symbols-outlined text-[#934b19]">person</span>
+                <c:if test="${loggedInUser != null}">
+                    <div class="flex flex-col items-end">
+                        <span class="text-sm font-bold text-primary">${loggedInUser.fullName != null ? loggedInUser.fullName : loggedInUser.email}</span>
+                        <form action="${pageContext.request.contextPath}/logout" method="POST" class="inline">
+                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                            <button type="submit" class="text-xs text-red-600 hover:underline">Đăng xuất</button>
+                        </form>
+                    </div>
+                    <a href="${pageContext.request.contextPath}/profile" class="hover:bg-orange-50 rounded-lg transition-all p-2 active:scale-95">
+                        <img src="${loggedInUser.profileImageUrl != null && loggedInUser.profileImageUrl ne '' ? loggedInUser.profileImageUrl : 'https://via.placeholder.com/32'}"
+                             alt="Avatar" class="w-8 h-8 rounded-full object-cover border border-gray-300"/>
+                    </a>
+                </c:if>
+                <c:if test="${loggedInUser == null}">
+                    <a href="${pageContext.request.contextPath}/login" class="hover:bg-orange-50 rounded-lg transition-all p-2 active:scale-95">
+                        <span class="material-symbols-outlined text-[#934b19]">person</span>
+                    </a>
+                </c:if>
             </div>
         </div>
     </nav>

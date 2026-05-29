@@ -37,9 +37,15 @@
                 <div class="absolute -top-4 -left-4 w-full h-full bg-surface-container-low rounded-lg -z-10 transition-transform group-hover:translate-x-2 group-hover:translate-y-2"></div>
                 <img class="w-full aspect-[3/4] object-cover rounded-lg shadow-2xl transition-transform duration-700 hover:scale-[1.02]" src="${book.imageUrl}" alt="${book.title}"/>
                 <div class="absolute top-6 right-6 flex flex-col gap-3">
-                    <button class="bg-surface-container-lowest/80 backdrop-blur-md p-3 rounded-full text-primary hover:bg-primary hover:text-on-primary transition-all shadow-lg">
-                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">favorite</span>
-                    </button>
+                    <sec:authorize access="isAuthenticated()">
+                        <c:set var="isFavorite" value="${isFavorite != null ? isFavorite : false}"/>
+                        <button type="button" onclick="toggleFavorite(this, ${book.id})"
+                           class="bg-surface-container-lowest/80 backdrop-blur-md p-3 rounded-full text-primary hover:bg-primary hover:text-on-primary transition-all shadow-lg"
+                           title="${isFavorite ? 'Xóa khỏi danh sách yêu thích' : 'Thêm vào danh sách yêu thích'}"
+                           data-book-id="${book.id}" data-is-favorite="${isFavorite}">
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' ${isFavorite ? 1 : 0};">favorite</span>
+                        </button>
+                    </sec:authorize>
                     <button class="bg-surface-container-lowest/80 backdrop-blur-md p-3 rounded-full text-primary hover:bg-primary hover:text-on-primary transition-all shadow-lg">
                         <span class="material-symbols-outlined">share</span>
                     </button>
@@ -73,7 +79,7 @@
                 <div class="bg-surface-container-low p-8 rounded-xl mb-10 leading-relaxed border-l-4 border-primary">
                     <h3 class="font-serif font-bold text-lg mb-3">Tóm lược nội dung</h3>
                     <p class="text-on-surface-variant text-base">
-                        ${book.description} <%-- Assuming Book model has a 'description' field --%>
+                        ${book.description}
                     </p>
                     <button class="mt-4 text-primary font-bold flex items-center gap-1 hover:gap-2 transition-all">
                         Xem chi tiết <span class="material-symbols-outlined text-sm">arrow_forward</span>
@@ -84,14 +90,14 @@
                         <span class="material-symbols-outlined text-primary">menu_book</span>
                         <div>
                             <p class="text-xs opacity-60">Số trang</p>
-                            <p class="font-bold">452 trang</p> <%-- Placeholder, assuming no page count in Book model --%>
+                            <p class="font-bold">452 trang</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 p-4 bg-surface-container-highest/30 rounded-lg">
                         <span class="material-symbols-outlined text-primary">translate</span>
                         <div>
                             <p class="text-xs opacity-60">Ngôn ngữ</p>
-                            <p class="font-bold">Tiếng Việt</p> <%-- Placeholder, assuming no language in Book model --%>
+                            <p class="font-bold">Tiếng Việt</p>
                         </div>
                     </div>
                 </div>
@@ -125,7 +131,7 @@
                 <!-- Review Card 1 -->
                 <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10 flex flex-col h-full">
                     <div class="flex items-center gap-4 mb-6">
-                        <img class="w-12 h-12 rounded-full object-cover" data-alt="Portrait of a young woman with a warm smile, professional lighting, outdoor autumn setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANHXIA-S1lNVyGT8ospUl0G0-9FHrlMDbm70kbGso2Ps6Jpiort1bF2VAMMwjKy_lV5Y0iQjV5tammBfcoq1K_3Kv1sMfoZXCMxcn9B5AkB0JO68qbuIAUw-0UHjJ8YjMTmfSZUhxx9PYBcfea291WjMk4Bo9Yu2f0NggJ3I3bWz-6EwxG7UATyUITtst8cVr4lIq4U6tTeigP734lhRumpI2wOx6uWixlxAtsOh3fShTKCx3ZXNuR-4zz7KlXlXS4xCqaMPTHkLyJ"/>
+                        <img class="w-12 h-12 rounded-full object-cover" data-alt="Portrait of a young woman with a warm smile, professional lighting, outdoor autumn setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANHXIA-S1lNVyGT8ospUl0G0-9FHrlMDbm70kbGso2Ps6Jpiort1bF2VAMMwjKy_lV5Y0iQjV5tammBfcoq1K_3Kv1sMfoZXCMxcn9B5AkB0JO68qbuIAUw-0UHjJ8YjMTmfSZUhxx9PYBcfea291WjMk4Bo9Yu2f0NggJ3I3bWz-6EwxG7UATyUITtst8cVr4lIq4U6tTeigP734lhRumpI2wOx6uWixlxAtsOh3fShTKCx3ZXNuR-4zz7FgeU2EnXeq4Qlg-3lDllSfrOi1lXw5uHrJF6YfhcrF4kviTmhqKoPSvtpV4obvwaa50lMNO3e2"/>
                         <div>
                             <p class="font-bold">Khánh Linh</p>
                             <p class="text-xs opacity-60">2 ngày trước</p>
@@ -159,7 +165,7 @@
                 <!-- Review Card 3 -->
                 <div class="bg-surface-container-low p-8 rounded-xl flex flex-col h-full border border-primary/5">
                     <div class="flex items-center gap-4 mb-6">
-                        <img class="w-12 h-12 rounded-full object-cover" data-alt="Portrait of a creative professional woman, minimalist studio lighting, warm skin tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6ITJtrpkhAkSojSIk8wHYKSC3jlWriih8_YpaG6f7HWQuW2zMJqtS-5R5N9st2-QnLGIq8jWfz5KNhyIQdsRypjivqPHiC-BQXGlBVxmEuWj-4lIJ8m_QNK1GtBET_TpEBVCOwPOaL-cahkbu6dZ8432Podakeo0ZHiPCjPCEMZU9uQrhkmcFcybnEbafTmQZlM3iGg9fN59D2SjCP-GbiDpmCby_YA0OhhSI4CI0YlXLYJ06jIEjwAwcPdn4oZaO9vig8aRYmo4Y_n"/>
+                        <img class="w-12 h-12 rounded-full object-cover" data-alt="Portrait of a creative professional woman, minimalist studio lighting, warm skin tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6ITJtrpkhAkSojSIk8wHYKSC3jlWriih8_YpaG6f7HWQuW2zMJqtS-5R5N9st2-QnLGIq8jWfz5KNhyIQdsRypjivqPHiC-BQXGlBVxmEuWj-4lIJ8m_QNK1GtBET_TpEBVCOwPOaL-cahkbu6dZ8432Podakeo0ZHiPCnPCEMZU9uQrhkmcFcybnEbafTmQZlM3iGg9fN59D2SjCP-GbiDpmCby_YA0OhhSI4CI0YlXLYJ06jIEjwAwcPdn4oZaO9vig8aRYmo4Y_n"/>
                         <div>
                             <p class="font-bold">Thùy Dương</p>
                             <p class="text-xs opacity-60">1 tháng trước</p>
@@ -170,7 +176,7 @@
                         <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">star</span>
                         <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">star</span>
                         <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">star</span>
-                        <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 0;">star</span>
+                        <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">star</span>
                     </div>
                     <p class="text-on-surface-variant flex-grow leading-relaxed">
                         "Bản in cực kỳ chất lượng, giấy thơm và dày dặn. Nội dung sâu sắc, rất đáng để sưu tầm trong tủ sách gia đình."
@@ -193,7 +199,7 @@
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
                 <%-- Placeholder for related books --%>
-                <c:forEach items="${relatedBooks}" var="relatedBook"> <%-- Changed to relatedBooks --%>
+                <c:forEach items="${relatedBooks}" var="relatedBook">
                     <div class="group cursor-pointer">
                         <div class="relative mb-6 overflow-hidden rounded-lg">
                             <img class="w-full aspect-[2/3] object-cover transition-transform duration-500 group-hover:scale-105" src="${relatedBook.imageUrl}" alt="${relatedBook.title}"/>
@@ -202,7 +208,7 @@
                             </div>
                         </div>
                         <h3 class="font-serif font-bold text-lg mb-1 group-hover:text-primary transition-colors">${relatedBook.title}</h3>
-                        <p class="text-sm opacity-60 italic mb-2">${relatedBook.author}</p>
+                        <p class="text-sm opacity-60 italic mb-2">${relatedBook.author.name}</p>
                         <p class="text-primary font-bold"><fmt:formatNumber value="${relatedBook.price}" type="number" groupingUsed="true"/>đ</p>
                     </div>
                 </c:forEach>
